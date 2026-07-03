@@ -9,7 +9,8 @@ import {
   Lightbulb, Users, Calendar, HelpCircle 
 } from "lucide-react";
 import { Github, Figma } from "@/components/icons/BrandIcons";
-import { skills, SkillCategory } from "@/data/portfolioData";
+import { skills } from "@/data/portfolioData";
+import { SkillCategory } from "@/types";
 
 // Icon mapping to prevent bundle bloat and ensure static-export compatibility
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {

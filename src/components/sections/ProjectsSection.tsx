@@ -5,7 +5,9 @@ import React, { useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ExternalLink, ShieldCheck, Cpu } from "lucide-react";
 import { Github } from "@/components/icons/BrandIcons";
-import { projects, Project } from "@/data/portfolioData";
+import { projects } from "@/data/portfolioData";
+import type { Project } from "@/types";
+
 
 function ProjectCard({ project }: { project: Project }) {
   const cardRef = useRef<HTMLDivElement>(null);

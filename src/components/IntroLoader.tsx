@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, Cpu } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 interface IntroLoaderProps {
   onComplete: () => void;
 }
 
-const CHORD_FREQS = [65.41, 130.81, 164.81, 196.00, 246.94];
+
 
 const TAGLINES = [
   "Building Data Platforms",
@@ -30,98 +30,13 @@ interface Particle {
 export default function IntroLoader({ onComplete }: IntroLoaderProps) {
   const [phase, setPhase] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [taglineIdx, setTaglineIdx] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+
   const [isVisible, setIsVisible] = useState(true);
   const [particleData, setParticleData] = useState<Particle[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [skipIntro, setSkipIntro] = useState(false);
 
-  // Web Audio Refs
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const oscillatorsRef = useRef<OscillatorNode[]>([]);
-  const gainNodeRef = useRef<GainNode | null>(null);
 
-  // Web Audio Synthesizer Controls
-  const startSynthesizer = () => {
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || 
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") {
-        ctx.resume();
-      }
-
-      // Establish global volume gain controller
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0, ctx.currentTime);
-      masterGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 1.5);
-      masterGain.connect(ctx.destination);
-      gainNodeRef.current = masterGain;
-
-      // Add a low-pass filter to remove harsh frequencies for a luxury warm sound
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(550, ctx.currentTime); // low-pass filter cutoff
-      filter.Q.setValueAtTime(1.5, ctx.currentTime);
-      filter.connect(masterGain);
-
-      // Create polyphonic oscillator voices
-      oscillatorsRef.current = CHORD_FREQS.map((freq) => {
-        const osc = ctx.createOscillator();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        osc.connect(filter);
-        osc.start();
-        return osc;
-      });
-    } catch (e) {
-      console.warn("Web Audio API failed to initialize:", e);
-    }
-  };
-
-  const stopSynthesizer = () => {
-    const ctx = audioCtxRef.current;
-    const masterGain = gainNodeRef.current;
-
-    if (ctx && masterGain) {
-      try {
-        masterGain.gain.cancelScheduledValues(ctx.currentTime);
-        masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
-
-        setTimeout(() => {
-          oscillatorsRef.current.forEach((osc) => {
-            try {
-              osc.stop();
-              osc.disconnect();
-            } catch {
-              // no-op
-            }
-          });
-          oscillatorsRef.current = [];
-          try {
-            masterGain.disconnect();
-          } catch {
-            // no-op
-          }
-          gainNodeRef.current = null;
-        }, 900);
-      } catch {}
-    }
-  };
-
-  const toggleSound = () => {
-    if (isMuted) {
-      setIsMuted(false);
-      startSynthesizer();
-    } else {
-      setIsMuted(true);
-      stopSynthesizer();
-    }
-  };
 
   // Main timeline drivers and mount side-effects
   useEffect(() => {
@@ -193,12 +108,7 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
     };
   }, [onComplete]);
 
-  // Clean up audio nodes on unmount
-  useEffect(() => {
-    return () => {
-      stopSynthesizer();
-    };
-  }, []);
+
 
   // Tagline cycle driver
   useEffect(() => {
@@ -279,23 +189,7 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
           ))}
         </div>
 
-        {/* Ambient Audio Toggle Button */}
-        <button
-          onClick={toggleSound}
-          className="absolute top-6 right-6 p-3 rounded-full glass-panel border border-white/5 hover:border-white/15 bg-white/[0.03] text-white/50 hover:text-white transition-colors duration-300 z-50 flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase cursor-pointer"
-        >
-          {isMuted ? (
-            <>
-              <VolumeX className="w-3.5 h-3.5" />
-              <span>Sound Off</span>
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-3.5 h-3.5 text-accent-pink animate-pulse" />
-              <span className="text-accent-pink">Sound On</span>
-            </>
-          )}
-        </button>
+
 
         {/* Phase 2+: Frosted Glass Dashboard Panel */}
         <motion.div
